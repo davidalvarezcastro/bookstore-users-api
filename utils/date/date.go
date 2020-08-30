@@ -3,8 +3,8 @@ package date
 import "time"
 
 const (
-	apiDateLayout = "2019-01-01T15:04:05Z"
-	apiDBLayout   = "2019-01-01 15:04:05"
+	apiDateLayout = "2006-01-02T15:04:05Z"
+	apiDBLayout   = "2006-01-02 15:04:05"
 )
 
 // GetNow returns the actual date
