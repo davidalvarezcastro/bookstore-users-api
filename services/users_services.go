@@ -2,12 +2,29 @@ package services
 
 import (
 	"github.com/davidalvarezcastro/bookstore-users-api/models/users"
+	"github.com/davidalvarezcastro/bookstore-users-api/utils/crypto"
 	"github.com/davidalvarezcastro/bookstore-users-api/utils/date"
 	"github.com/davidalvarezcastro/bookstore-users-api/utils/errors"
 )
 
+var (
+	// UserService is the user service with all the functions defined in userServiceInterface
+	UserService userServiceInterface = &userService{}
+)
+
+type userService struct {
+}
+
+type userServiceInterface interface {
+	Get(userID int64) (*users.User, *errors.RestErr)
+	Create(user users.User) (*users.User, *errors.RestErr)
+	Update(isPartial bool, user users.User) (*users.User, *errors.RestErr)
+	Delete(userID int64) *errors.RestErr
+	Search(status string) (users.Users, *errors.RestErr)
+}
+
 // Get service to return an user
-func Get(userID int64) (*users.User, *errors.RestErr) {
+func (s *userService) Get(userID int64) (*users.User, *errors.RestErr) {
 	result := users.User{ID: userID}
 	if err := result.Get(); err != nil {
 		return nil, err
@@ -17,12 +34,13 @@ func Get(userID int64) (*users.User, *errors.RestErr) {
 }
 
 // Create service to create an user
-func Create(user users.User) (*users.User, *errors.RestErr) {
+func (s *userService) Create(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
 
 	user.Status = users.StatusActive
+	user.Password = crypto.GetMd5(user.Password)
 	user.DateCreated = date.GetNowDBFormat()
 
 	if err := user.Save(); err != nil {
@@ -33,8 +51,8 @@ func Create(user users.User) (*users.User, *errors.RestErr) {
 }
 
 // Update service to update user info
-func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
-	current, err := Get(user.ID)
+func (s *userService) Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
+	current, err := s.Get(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +83,7 @@ func Update(isPartial bool, user users.User) (*users.User, *errors.RestErr) {
 }
 
 // Delete service to remove an user
-func Delete(userID int64) *errors.RestErr {
+func (s *userService) Delete(userID int64) *errors.RestErr {
 	user := users.User{ID: userID}
 	if err := user.Get(); err != nil {
 		return err
@@ -75,7 +93,7 @@ func Delete(userID int64) *errors.RestErr {
 }
 
 // Search service to search users
-func Search(status string) ([]users.User, *errors.RestErr) {
+func (s *userService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := users.User{}
 	return dao.FindByStatus(status)
 }
