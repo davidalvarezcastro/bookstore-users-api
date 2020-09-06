@@ -21,6 +21,7 @@ type userServiceInterface interface {
 	Update(isPartial bool, user users.User) (*users.User, *errors.RestErr)
 	Delete(userID int64) *errors.RestErr
 	Search(status string) (users.Users, *errors.RestErr)
+	LoginUser(users.LoginRequest) (*users.User, *errors.RestErr)
 }
 
 // Get service to return an user
@@ -96,4 +97,18 @@ func (s *userService) Delete(userID int64) *errors.RestErr {
 func (s *userService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := users.User{}
 	return dao.FindByStatus(status)
+}
+
+// LoginUser service to login a user
+func (s *userService) LoginUser(request users.LoginRequest) (*users.User, *errors.RestErr) {
+	dao := &users.User{
+		Email:    request.Email,
+		Password: crypto.GetMd5(request.Password),
+	}
+
+	if err := dao.FindByEmailAndPassword(); err != nil {
+		return nil, err
+	}
+
+	return dao, nil
 }
