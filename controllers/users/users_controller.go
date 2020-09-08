@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/davidalvarezcastro/bookstore-oauth-go/oauth"
 	"github.com/davidalvarezcastro/bookstore-users-api/models/users"
 	"github.com/davidalvarezcastro/bookstore-users-api/services"
 	"github.com/davidalvarezcastro/bookstore-users-api/utils/errors"
@@ -44,6 +45,21 @@ func Create(c *gin.Context) {
 
 // Get returns the information of a user
 func Get(c *gin.Context) {
+	// if we want to force to authenticate a user
+	// if callerID := oauth.GetCallerID(c.Request); callerID == 0 {
+	// 	err := errors.RestErr{
+	// 		Status:  http.StatusUnauthorized,
+	// 		Message: "resource not available",
+	// 	}
+	// 	c.JSON(err.Status, err)
+	// 	return
+	// }
+
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
 	userID, err := getUserID(c.Param("user_id"))
 	if err != nil {
 		c.JSON(err.Status, err)
@@ -56,7 +72,12 @@ func Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user.Marshall(c.GetHeader("X-Public") == "true"))
+	if oauth.GetCallerID(c.Request) == user.ID {
+		c.JSON(http.StatusOK, user.Marshall(false))
+		return
+	}
+
+	c.JSON(http.StatusOK, user.Marshall(oauth.IsPublic(c.Request)))
 }
 
 // Update updates info of a user
