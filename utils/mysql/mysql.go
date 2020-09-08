@@ -1,9 +1,10 @@
 package mysqlutils
 
 import (
+	"errors"
 	"strings"
 
-	"github.com/davidalvarezcastro/bookstore-users-api/utils/errors"
+	errorsutils "github.com/davidalvarezcastro/bookstore-utils-go/rest_errors"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -13,19 +14,19 @@ const (
 )
 
 // ParseError checks and return differents types of RestErr depends on the error receives
-func ParseError(err error) *errors.RestErr {
+func ParseError(err error) *errorsutils.RestErr {
 	sqlErr, ok := err.(*mysql.MySQLError)
 	if !ok {
 		if strings.Contains(err.Error(), ErrorNoRows) {
-			return errors.NewNotFoundError("no record matching given id")
+			return errorsutils.NewNotFoundError("no record matching given id")
 		}
-		return errors.NewInternalServerError("error parsing database response")
+		return errorsutils.NewInternalServerError("error parsing database response", err)
 	}
 
 	switch sqlErr.Number {
 	case 1062:
-		return errors.NewBadRequestError("invalid data")
+		return errorsutils.NewBadRequestError("invalid data")
 	}
 
-	return errors.NewInternalServerError("error processing request")
+	return errorsutils.NewInternalServerError("error processing request", errors.New("database error"))
 }

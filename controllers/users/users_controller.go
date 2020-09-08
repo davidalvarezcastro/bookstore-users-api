@@ -7,14 +7,14 @@ import (
 	"github.com/davidalvarezcastro/bookstore-oauth-go/oauth"
 	"github.com/davidalvarezcastro/bookstore-users-api/models/users"
 	"github.com/davidalvarezcastro/bookstore-users-api/services"
-	"github.com/davidalvarezcastro/bookstore-users-api/utils/errors"
+	errorsutils "github.com/davidalvarezcastro/bookstore-utils-go/rest_errors"
 	"github.com/gin-gonic/gin"
 )
 
-func getUserID(userIDPram string) (int64, *errors.RestErr) {
+func getUserID(userIDPram string) (int64, *errorsutils.RestErr) {
 	userID, err := strconv.ParseInt(userIDPram, 10, 64)
 	if err != nil {
-		return 0, errors.NewBadRequestError("user id should be a number")
+		return 0, errorsutils.NewBadRequestError("user id should be a number")
 	}
 
 	return userID, nil
@@ -29,7 +29,7 @@ func Create(c *gin.Context) {
 	// 	if err != nil {}
 	// 	if err := json.Unmarshal(bytes, &user); err != nil {}
 	if err := c.ShouldBindJSON(&user); err != nil {
-		restErr := errors.NewBadRequestError("invalid json body")
+		restErr := errorsutils.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
@@ -47,7 +47,7 @@ func Create(c *gin.Context) {
 func Get(c *gin.Context) {
 	// if we want to force to authenticate a user
 	// if callerID := oauth.GetCallerID(c.Request); callerID == 0 {
-	// 	err := errors.RestErr{
+	// 	err := errorsutils.RestErr{
 	// 		Status:  http.StatusUnauthorized,
 	// 		Message: "resource not available",
 	// 	}
@@ -90,7 +90,7 @@ func Update(c *gin.Context) {
 
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		restErr := errors.NewBadRequestError("invalid json body")
+		restErr := errorsutils.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
@@ -142,7 +142,7 @@ func Login(c *gin.Context) {
 	var request users.LoginRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		restErr := errors.NewBadRequestError("invalid json body")
+		restErr := errorsutils.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
